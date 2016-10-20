@@ -167,14 +167,10 @@
 	);end cond
   );end
 
-; EXERCISE: Modify this function to return true (t)
-; if and only if s is a goal state of a Sokoban game.
-; (no box is on a non-goal square)
+; This function iterates through each row of the state s and calls goal-test-row
+; and returns through if all row calls return trye as well.
 ;
-; Currently, it always returns NIL. If A* is called with
-; this function as the goal testing function, A* will never
-; terminate until the whole search space is exhausted.
-;
+; s - state of the game
 (defun goal-test (s)
 	(cond
 		((null s)					nil)
@@ -186,7 +182,10 @@
 );end defun
 
   
-; This function checks if the row satisfied
+; This function checks if any items in the sRow list is of box type. If so it returns nil
+; if the end is found then it returns t
+
+; sRow - single row of a game state s
 (defun goal-test-row (sRow)
 	(cond
 		((null sRow)											nil)
@@ -199,36 +198,40 @@
 	)
 )
   
-; EXERCISE: Modify this function to return the list of
-; sucessor states of s.
+
 ;
-; This is the top-level next-states (successor) function.
-; Some skeleton code is provided below.
-; You may delete them totally, depending on your approach.
+; This function returns a list of all the possible state when moving the keeper in one
+; of the four Cardinal directions: UP, DOWN, LEFT, Right
 ;
-; If you want to use it, you will need to set 'result' to be
-; the set of states after moving the keeper in each of the 4 directions.
-; A pseudo-code for this is:
+; Our state s is defined as the grid where the top left most corner is (0, 0). Moving to the rihgt
+; increase the column count (0, 1) moving down increases the row count (1, 0)
+
+; UP : (-1 0)
+; DOWN : (1 0)
+; LEFT : (0 1)
+; RIGHT : (0 -1)
 ;
-; ...
-; (result (list (try-move s UP) (try-move s DOWN) (try-move s LEFT) (try-move s RIGHT)))
-; ...
+; Try move will return the result of attempting to move in that direction (nil or new a state).
+; This results are combined into a single list and cleanUpList removes and nill items and returns
+; a final list of possible moves
 ; 
-; You will need to define the function try-move and decide how to represent UP,DOWN,LEFT,RIGHT.
-; Any NIL result returned from try-move can be removed by cleanUpList.
-;
+; s - current state of our game
 (defun next-states (s)
 	(let*
-		((pos (getKeeperPosition s 0))
-			(x (car pos))
-			(y (cadr pos))
-			;x and y are now the coordinate of the keeper in s.
+		(
 			(result (list (try-move s '(1 0)) (try-move s '(-1 0)) (try-move s '(0 -1)) (try-move s '(0 1))))
 		)
 		(cleanUpList result);end
 	);end let
 );
 
+; This function returns the value in state s at a specified row (r), column (c)
+; It iteratively tries to find the correct row. Once it does it passes the row to
+; get-square-from-row to find the correct column value and returns this value
+;
+; s - current state of the game
+; r - row at which we are searching for a value
+; c - column at which we are searching for a value
 (defun get-square (s r c)
 	(cond
 		((or (null s) (null r) (null c))		nil)
@@ -237,6 +240,9 @@
 	)
 )
 
+; This function returns the value at position c in the list sRow.
+;
+; sRow - single row from game 
 (defun get-square-from-row (sRow c)
 	(cond
 		((null sRow)	nil)
@@ -329,22 +335,26 @@
 )
 
 ;used to test problems
-(defun tester (s)
+(defun tester (s )
 	(printStates (a* s #'goal-test #'next-states #'hUID) 0.2)
 )
 
 
 
-; EXERCISE: Modify this function to compute the trivial
-; admissible heuristic.
+; This is the trivial admissible heursistic that returns the value of zero.
+; Number of moves required to win is at least 0 (if current state = winning state)
+; That makes this heuristic addmissable
 ;
+; s - the state of a board (not needed, added for symmetry with other heuristic functions)
 (defun h0 (s)
 	0
 )
 
-; EXERCISE: Modify this function to compute the
-; number of misplaced boxes in s.
+; This function breaks down the state s into rows and calls the h1Row method to
+; calcualte the independent count of rows and then adds then together and returns
+; that value
 ;
+; s - The state of a board
 (defun h1 (s)
 	(cond
 		((null s)			0)
@@ -352,6 +362,10 @@
 	)
 )
 
+; This function goes through every row and counts how many items
+; of type box are in this row.
+
+; sRow - A single row from a state s
 (defun h1Row (sRow)
 	(cond
 		((null sRow)				0)
